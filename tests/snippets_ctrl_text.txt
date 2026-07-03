@@ -1,0 +1,44 @@
+# tests/snippets_ctrl_text.txt — WM_GETTEXT-based control text test
+#
+# Validates the expect_ctrl_text primitive:
+#     ( "WindowTitle" "ChildClassName" "ExpectedSubstring" -- )
+#   FindWindowA(title) -> FindWindowExA(hwnd, class) -> WM_GETTEXT
+#   then substring-matches "expected" in the returned buffer.
+#
+# Setup before running:
+#   1. Open classic Notepad (notepad.exe — NOT Win11 new Notepad,
+#      which uses Windows App SDK and not the Edit control class).
+#   2. Type the literal text:   Hello cf22
+#   3. Do NOT save (so the title stays "*Untitled - Notepad").
+#      Note the leading "*" — Notepad prepends it for unsaved buffers.
+#
+# Launch:
+#   color_iw.exe tests/snippets_ctrl_text.txt
+#
+# Run:
+#   Ctrl+Shift+E  -> runs the test set.
+#
+# Expected color_debug.log lines:
+#   [TEST notepad_edit] BEGIN
+#   [TEST notepad_edit] PASS                              (implicit)
+#   [TEST cf22_self_no_ctrl] BEGIN
+#   [TEST cf22_self_no_ctrl] FAIL: expect_ctrl_text: control class not found: Edit
+#   [TEST RUN] 00000001 pass, 00000001 fail
+#
+# Then:
+#   runtests.bat tests/snippets_ctrl_text.txt
+#     should exit 1 (one expected failure proves the negative path).
+#
+# To repurpose for Notepad++:
+#   Title: "new 1 - Notepad++", Class: "Scintilla"
+# For Excel (formula bar):
+#   Title: "Book1 - Excel",     Class: "EXCEL<E>"   (use AHK Window Info to confirm)
+
+::: tCtrlText ! Ctrl+Shift+E
+"notepad_edit" tname
+"*Untitled - Notepad" "Edit" "Hello cf22" expect_ctrl_text
+
+"cf22_self_no_ctrl" tname
+"ColorForth 22 for Win32" "Edit" "anything" expect_ctrl_text
+
+tsummary

@@ -1,0 +1,59 @@
+# tests/snippets_tests.txt — snippet manager self-tests (Direction C)
+#
+# Setup:
+#   1. Open D:\cf22\Images\OpenButton.bmp in any viewer with the image
+#      VISIBLE on screen (don't cover with other windows).
+#   2. Make sure no Notepad window is currently open with title
+#      "Untitled - Notepad" (close any existing untitled notepad first).
+#
+# Launch:
+#   color_iw.exe tests/snippets_tests.txt
+#
+# Run all:
+#   Press Ctrl+Shift+B.
+#
+# Verify:
+#   runtests.bat
+#
+# Expected: ALL PASS — [TEST RUN] 00000005 pass, 00000000 fail
+
+::: tC_all ! Ctrl+Shift+B
+
+# tC1 — cf22 self window: confirms snippet manager + main window are
+# both alive in the same process (the LL hook is in cf22's process).
+"tC1_cf22_window" tname
+"ColorForth 22 for Win32" expect_window
+
+# tC2 — Stage C v1 inline image search: finds the landmark BMP. This
+# also exercises Stage C v2's target-BMP cache.
+"tC2_imgfind_v1" tname
+"Images\OpenButton.bmp" 50 expect_img
+
+# tC3 — Stage C v2 target cache: re-run the same expect_img. The
+# cached_target_fname strcmp short-circuits the file read + header parse.
+"tC3_imgfind_v2_cache" tname
+"Images\OpenButton.bmp" 50 expect_img
+
+# tC4 — pixel read sanity: any pixel within tol 255 of any value.
+"tC4_pixel_read" tname
+0 0 0 255 expect_pixel
+
+# tC5 — `run` + `winwait`: launches Notepad, waits up to 3s for its
+# window, then expect_window confirms it.
+"tC5_run_notepad" tname
+"notepad" run
+"Untitled - Notepad" 3000 winwait
+"Untitled - Notepad" expect_window
+
+# tC6 — expect_no_window: assert a definitely-absent window is absent.
+"tC6_window_absent" tname
+"DefinitelyNotAWindowTitle 99999" expect_no_window
+
+# tC7 — expect_no_img: assert a definitely-absent image is absent.
+"tC7_img_absent" tname
+"Images\DoesNotExist.bmp" 50 expect_no_img
+
+# Implicit PASS for each test is emitted by the next tname (or tsummary
+# for the last test) when current_test_failed == 0. Explicit tpass
+# still works for tests that need an explicit success marker.
+tsummary

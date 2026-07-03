@@ -1,0 +1,42 @@
+# tests/snippets_no_ctrl_text.txt — expect_no_ctrl_text_in smoke test
+#
+# expect_no_ctrl_text_in ( "title_substr" "class" "expected" -- )
+#   Inverse-substring assertion: PASSes when the needle is NOT
+#   present in the matched control's text. Vacuously passes when
+#   the window or class doesn't exist (target absent = text
+#   absent). FAILs only when the lookup succeeds AND the needle
+#   is found inside the control.
+#
+# Use case: "verify the editor does NOT contain 'TODO' anywhere"
+# or "ensure no error string is showing in this dialog".
+#
+# Setup before running:
+#   - Open Notepad++ with multiple tabs. The earlier scan-all test
+#     showed your Notepad++ had a tab with content containing the
+#     word "axelor" (Maven pom xml).
+#
+# Launch:
+#   color_iw.exe tests/snippets_no_ctrl_text.txt
+#
+# Run:
+#   Ctrl+Shift+1  — assert no "axelor" in first Scintilla.
+#                   Depends which tab is active — may PASS or FAIL.
+#                   Note: this uses expect_no_ctrl_text_in (first
+#                   match via FindWindowExA, not scan-all).
+#   Ctrl+Shift+2  — assert no impossible string. PASS (vacuously —
+#                   needle obviously not in any text).
+#   Ctrl+Shift+3  — assert no string in a non-existent window. PASS
+#                   (vacuously — target absent).
+
+::: tNCT_axelor ! Ctrl+Shift+1
+"no_ctrl_text_no_axelor" tname
+"Notepad++" "Scintilla" "axelor" expect_no_ctrl_text_in
+
+::: tNCT_impossible ! Ctrl+Shift+2
+"no_ctrl_text_impossible" tname
+"Notepad++" "Scintilla" "zzz_definitely_not_in_any_tab_zzz" expect_no_ctrl_text_in
+
+::: tNCT_no_window ! Ctrl+Shift+3
+"no_ctrl_text_no_window" tname
+"no_window_xyz123" "Edit" "anything" expect_no_ctrl_text_in
+tsummary

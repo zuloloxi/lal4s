@@ -1,0 +1,40 @@
+# tests/snippets_enumwins.txt — enumwins smoke test
+#
+# enumwins ( -- )
+#   Dumps every visible top-level window (skipping invisible and
+#   nameless ones — system tray internals, off-screen tooltips, etc).
+#   Use to disambiguate substring conflicts: you have 2 Notepad++
+#   windows; enumwins shows both with distinct hwnds + titles.
+#
+# Launch:
+#   color_iw.exe tests/snippets_enumwins.txt
+#
+# Run:
+#   Ctrl+Shift+7  — dump top-level windows. Each press refreshes.
+#
+# Expected log per press:
+#   [WINS] start
+#     hwnd=NNNNNNNN  class="..."  title="..."
+#     hwnd=NNNNNNNN  class="..."  title="..."
+#     ... (typically 20-50 entries)
+#   [WINS] end — count=NNNNNNNN visible top-level windows
+#
+# Typical entries you'll see in this log:
+#   - Multiple "Notepad++" instances (different hwnds, different
+#     active-tab names in title)
+#   - "ColorForth 22 for Win32" — cf22 itself
+#   - Various Edge / Chrome / Explorer / VS Code windows
+#   - Shell internals like "Program Manager"
+
+::: tWINS_dump ! Ctrl+Shift+7
+"enumwins_dump" tname
+enumwins
+
+# enumwinsh = enumwins + show hidden / nameless windows too.
+# Expect FAR more entries — typically 100-200 on a typical desktop
+# (every shell tray surface, every off-screen tooltip, every hidden
+# service window). Use to spot background services or hidden helpers
+# that enumwins's filters would skip.
+::: tWINS_dump_hidden ! Ctrl+Shift+8
+"enumwinsh_dump" tname
+enumwinsh

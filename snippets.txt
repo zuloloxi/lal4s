@@ -1,0 +1,181 @@
+# cf22 snippets — Phase 1+2 sample bundle
+# Each `:: <short>` line starts a snippet. Body follows until next `::` or EOF.
+# Optional `! Mods+VK` after the short binds a global hotkey (Phase 2).
+#   Mods: Ctrl  Alt  Shift  Win   (case-insensitive, `+` separated)
+#   VK:   single letter A..Z or digit 0..9
+# Examples:
+#   :: pw ! Ctrl+Shift+P          (shorthand AND hotkey)
+#   :: ! Ctrl+Alt+M               (hotkey-only, no shorthand)
+
+:: test
+ hello world|goodbye world
+
+:: pw ! Ctrl+Shift+P
+Password123+
+
+:: br
+Best Regards !
+
+:: m ! Ctrl+Alt+M
+Hello Mister John
+
+:: addr
+123 Main St
+Apt 4B
+
+# Phase 3 script snippets (use `:::` marker).
+# Tokens: number, "string", identifier.
+# Commands: wait, type, send, paste, enter, tab, move, click, rclick, dclick.
+
+::: ts ! Ctrl+Shift+T
+"hello from script " type "ctrl+v" send
+
+::: tt
+"line 1" type enter "line 2" type enter
+
+::: tm ! Ctrl+Shift+W
+500 wait 100 100 move click
+
+::: ta ! Ctrl+Shift+A
+"shift+a" send
+
+# Phase 3B — window navigation + process launch
+
+::: nopad ! Ctrl+Shift+N
+"notepad" run
+
+::: ntest ! Ctrl+Shift+L
+"notepad" run "Untitled - Notepad" 3000 winwait
+"hello from a script that ran notepad" type
+
+# Phase 3C Stage A — pixel-color primitives
+# pixelcolor ( x y -- bgr )         reads screen pixel; bgr = 0x00BBGGRR
+# pixelwait  ( x y bgr ms -- )      polls until pixel == bgr or timeout
+#
+# Numbers in scripts are decimal-only for now:
+#   white  = 16777215   (0xFFFFFF)
+#   black  = 0
+#   red    = 255        (0x0000FF)
+#   green  = 65280      (0x00FF00)
+#   blue   = 16711680   (0xFF0000)
+
+# pxc — read pixel at (10,10) and treat the resulting value as ms for
+# `wait`. Boring on its own; demonstrates that pixelcolor pushes a value.
+::: pxc ! Ctrl+Shift+1
+10 10 pixelcolor wait
+
+# pxw — wait up to 5s for (10, 10) to become white, then click there
+::: pxw ! Ctrl+Shift+2
+10 10 16777215 5000 pixelwait 10 10 move click
+
+# Phase 3C Stage B — image search via ImageSearchDLL.dll
+# DLL is the AutoHotkey ImageSearch C++ port (Libraries\ImageSearchDLL\).
+# Requires ImageSearchDLL.dll next to color_iw.exe or in
+# Libraries\ImageSearchDLL\ImageSearchDLL\Release\.
+#
+# imgfind  ( "fname" tol -- cx cy found )
+# imgclick ( "fname" tol -- )
+# imgwait  ( "fname" tol ms -- )
+#
+# tol = pixel-channel tolerance (0 = exact, 50 = forgiving).
+# BMP always works; PNG depends on whether the DLL was built with GDI+.
+
+# Quick test: open Images\OpenButton.bmp in Paint or Photo Viewer
+# so it's visible on screen, then trigger the hotkey.
+# OpenButton.bmp (304x35) is easy to spot — the cursor jumps
+# to its middle and clicks.
+
+::: ifd ! Ctrl+Shift+3
+"Images\OpenButton.bmp" 50 imgclick
+
+::: iwt ! Ctrl+Shift+4
+"Images\OpenButton.bmp" 50 10000 imgwait
+
+# Rect-bound variants. Stack: x1 y1 x2 y2 fname tol [ms].
+# Restricts search to a screen rect — much faster than full screen.
+#
+# Ctrl+Shift+5 — search ONLY in the upper-left quadrant (0,0 → 960,540).
+# If the BMP is anywhere else, nothing happens — proves the rect bounds.
+::: ifdi ! Ctrl+Shift+5
+0 0 960 540 "Images\OpenButton.bmp" 50 imgclickin
+
+# Ctrl+Shift+6 — search in the middle band (500,300 → 1400,700).
+# Wide enough to contain the BMP wherever Photo Viewer puts it; should
+# click on the OPEN button just like Ctrl+Shift+3 does, but faster
+# because it only scans ~40% of the screen.
+::: ifdic ! Ctrl+Shift+6
+500 300 1400 700 "Images\OpenButton.bmp" 50 imgclickin
+
+# Phase 3C Stage C — DLL-free inline image search (BMP only).
+# Same arg shape as imgfind/imgfindin; the `c` suffix swaps the engine
+# (ImageSearchDLL → asm BitBlt+nested-loop scan).
+#
+# Ctrl+Shift+7 — run BOTH engines on the same BMP back-to-back. Open
+# the OpenButton.bmp in any viewer first, then hit Ctrl+Shift+7
+# and inspect color_debug.log: an ImageSearch line and an ImgInline
+# line should appear, with matching "1|x|y|w|h" coords if Stage C is
+# correct. (imgfind / imgfindc push cx, cy, found to the script stack —
+# left there; no UI side effect.)
+::: tc ! Ctrl+Shift+7
+"Images\OpenButton.bmp" 50 imgfind
+"Images\OpenButton.bmp" 50 imgfindc
+
+# Phase 3C Stage C v2 — caching test.
+# tcw uses the polling variant `imgwaitc`. With v2 caching, the target
+# BMP is parsed once and the screen is BitBlt'd once before the loop;
+# each iteration is just a pixel scan. Compare against `imgwait` (DLL,
+# no cache — DLL re-captures every iteration). Both should land at the
+# same coords if matched.
+#
+# Open Images\OpenButton.bmp in a viewer, hit Ctrl+Shift+8.
+::: tcw ! Ctrl+Shift+8
+"Images\OpenButton.bmp" 50 5000 imgwait
+"Images\OpenButton.bmp" 50 5000 imgwaitc
+
+# Stage C v2 also adds ::skip <classname>. Use this to opt out the
+# LL keyboard hook for terminal classes the defaults didn't catch.
+# Default already includes: ConsoleWindowClass (cmd, PowerShell),
+# CASCADIA_HOSTING_WINDOW_CLASS (Windows Terminal),
+# Windows.UI.Core.CoreWindow, PuTTY, mintty.
+# Add more here or in settings.txt (skip=<class> per line).
+#
+# Example (uncomment to skip Wezterm and ConEmu):
+# ::skip Wezterm
+# ::skip ConEmuHwnd
+
+# Direction B — assertion primitives smoke test (Ctrl+Shift+F1).
+# Exercises all 7 primitives in sequence. Designed to produce
+# a mix of PASS and FAIL so both code paths log.
+#
+# Expected color_debug.log lines (in order):
+#   [TEST b1_name_pass]  BEGIN
+#   [TEST b1_name_pass]  PASS
+#   [TEST b2_explicit_fail]  BEGIN
+#   [TEST b2_explicit_fail]  FAIL: forced failure for log verification
+#   [TEST b3_pixel_ok]  BEGIN
+#   [TEST b3_pixel_ok]  PASS   (or FAIL if top-left isn't black)
+#   [TEST b4_pixel_miss]  BEGIN
+#   [TEST b4_pixel_miss]  FAIL: expect_pixel mismatch x=0000000A ...
+#   [TEST b5_img_present]  BEGIN
+#   [TEST b5_img_present]  PASS   (with OpenButton.bmp visible)
+#   [TEST b6_img_absent]  BEGIN
+#   [TEST b6_img_absent]  FAIL: expect_img not found: *50 ...
+#   [TEST b7_window_self]  BEGIN
+#   [TEST b7_window_self]  PASS   (cf22 main window exists)
+#   [TEST RUN] N pass, M fail
+::: tB_smoke ! Ctrl+Shift+B
+"b1_name_pass" tname
+tpass
+"b2_explicit_fail" tname
+"forced failure for log verification" tfail
+"b3_pixel_ok" tname
+0 0 0 30 expect_pixel
+"b4_pixel_miss" tname
+10 10 16777215 5 expect_pixel
+"b5_img_present" tname
+"Images\OpenButton.bmp" 50 expect_img
+"b6_img_absent" tname
+"Images\NoSuchImage.bmp" 50 expect_img
+"b7_window_self" tname
+"ColorForth 22 for Win32" expect_window
+tsummary

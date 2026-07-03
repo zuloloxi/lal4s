@@ -1,0 +1,28 @@
+LIBRARY	"helpers"
+
+EXPORTS
+
+	ImageSearch
+	ImageTest
+	WinShot
+	DebugBox
+	TabNavCount
+	TabNavGetTitle
+	TabNavSwitchTo
+	TabNavSnapshot
+	FindAndClickButton
+	ConsentRejectAll
+	UncheckAll
+	UIADump
+	CdpLaunchEdge
+	CdpConnect
+	CdpEval
+	CdpSelfTestRun
+	CdpGetConsoleErrors
+	CdpGetNetworkFailures
+	CdpClearLog
+	CdpC2SelfTestRun
+	CdpDisconnect
+	CdpShutdown
+	CdpCheckHealth
+	CdpWatchSelfTestRun

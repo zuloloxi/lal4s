@@ -1,0 +1,160 @@
+# =============================================================================
+#  all.txt - the three lal4s scenarios combined (hotkeys don't collide).
+#    CDP F1-F4  |  dev loop F5-F7  |  windows F8-F12.  See README.md.
+#    Load:  lal4s.exe scenarios\all.txt
+# =============================================================================
+
+# =============================================================================
+#  CDP scenario - exercise the web* commands against the local Node test server.
+#
+#  SETUP:  node tests\webserver\server.js        (serves http://localhost:8722)
+#  LOAD:   lal4s.exe scenarios\cdp_scenario.txt
+#  RUN:    press the hotkeys below; watch lal4s_debug.log (tail it live).
+#  Needs helpers.dll (CDP exports) + Edge/Chrome. Hotkeys: Ctrl+Shift+F1..F4.
+# =============================================================================
+
+# --- F1: health check of the GOOD page (expect ALL PASS) --------------------
+::: cdp_good ! Ctrl+Shift+F1
+"http://localhost:8722/good.html" 9222 weburl
+1500 wait
+webclear
+"good_renders" tname
+"#main" expect_dom
+"good_title" tname
+"document.title === 'cf22 Good Page'" expect_js
+"good_ready_flag" tname
+"window.cf22Ready === true" expect_js
+"good_no_console_errors" tname
+expect_no_console_errors
+"good_no_net_failures" tname
+expect_no_net_failures
+tsummary
+webclose
+
+# --- F2: inspect live page values with weblog -------------------------------
+::: cdp_inspect ! Ctrl+Shift+F2
+"http://localhost:8722/good.html" 9222 weburl
+1500 wait
+"document.title" weblog
+"document.getElementById('main').textContent" weblog
+"document.getElementById('status').textContent" weblog
+"document.querySelectorAll('button').length" weblog
+webclose
+
+# --- F3: drive the page with webeval, then read the effect with weblog -------
+::: cdp_drive ! Ctrl+Shift+F3
+"http://localhost:8722/good.html" 9222 weburl
+1500 wait
+"document.getElementById('status').textContent" weblog
+"document.getElementById('status').textContent = 'set via CDP'" webeval
+"document.getElementById('go').click()" webeval
+"document.getElementById('status').textContent" weblog
+webclose
+
+# --- F4: NEGATIVE - the BAD page must trip the detectors (expect FAILs) ------
+# bad.html fires console.error + uncaught throw + 404 img + 500 fetch on load.
+::: cdp_bad ! Ctrl+Shift+F4
+"http://localhost:8722/bad.html" 9222 weburl
+1000 wait
+"bad_console_errors_caught" tname
+expect_no_console_errors
+"bad_net_failures_caught" tname
+expect_no_net_failures
+"bad_watch_detects_broken" tname
+"window.cf22Ready === true" 400 3 webwatch
+tsummary
+webclose
+
+# =============================================================================
+#  Natural dev loop - edit your web app, press ONE hotkey, read the verdict.
+#
+#  SETUP:  node tests\webserver\server.js   (or point weburl at YOUR dev server)
+#  LOAD:   lal4s.exe scenarios\devloop_scenario.txt
+#  FLOW:   F6 once to open + connect  ->  F5 after every code change  ->  F7 to close.
+#  Keep lal4s_debug.log tailing; each F5 appends a fresh PASS/FAIL block + values.
+#  Hotkeys: Ctrl+Shift+F5 (check), F6 (open), F7 (close).
+# =============================================================================
+
+# --- F6: open the page + connect ONCE (keep Edge up for the loop) -----------
+::: dev_open ! Ctrl+Shift+F6
+"http://localhost:8722/good.html" 9222 weburl
+1500 wait
+"dev_open" tname
+"#main" expect_dom
+tsummary
+
+# --- F5: the loop - clear logs, reload, re-assert, dump values ---------------
+# Press this after each edit. It reloads the live page (no relaunch), so it
+# catches console errors / failed requests introduced by your change, and the
+# weblog lines let you eyeball state each iteration.
+::: dev_check ! Ctrl+Shift+F5
+webclear
+"location.reload()" webeval
+1200 wait
+"renders" tname
+"#main" expect_dom
+"ready" tname
+"window.cf22Ready === true" expect_js
+"no_console_errors" tname
+expect_no_console_errors
+"no_net_failures" tname
+expect_no_net_failures
+tsummary
+"document.title" weblog
+"document.body.innerText.length" weblog
+
+# --- F7: close the session --------------------------------------------------
+::: dev_close ! Ctrl+Shift+F7
+webclose
+
+# =============================================================================
+#  Window automation - launch, focus, drive, and close windows from hotkeys.
+#    The natural pairing:  run -> winwait -> type/key/click -> winclose
+#  Plus paste-proof password entry via type (real keystrokes, not Ctrl+V).
+#
+#  LOAD:   lal4s.exe scenarios\windows_scenario.txt
+#  Hotkeys: Ctrl+Shift+F8..F12.
+# =============================================================================
+
+# --- F8: full launch -> drive -> close cycle (Notepad) ----------------------
+::: win_notepad ! Ctrl+Shift+F8
+"notepad" run
+"Untitled - Notepad" 3000 winwait
+"Hello from lal4s automation" type
+enter
+"driven by  run -> winwait -> type -> winclose" type
+"home" key
+1000 wait
+"Notepad" winclose
+600 wait
+"alt+n" send                     # "Don't Save" on Notepad's close prompt, if any
+
+# --- F9: focus an existing window by title substring, drive it, minimize ----
+::: win_drive ! Ctrl+Shift+F9
+"Notepad" winactivate_substr     # substring match - survives title changes
+300 wait
+"end" key
+"  ...appended by lal4s" type
+"Notepad" winmin
+
+# --- F10: tidy a window - move + resize by substring ------------------------
+::: win_tidy ! Ctrl+Shift+F10
+"Notepad" winactivate_substr
+0 0 "Notepad" winmove            # top-left corner
+1000 700 "Notepad" winsize       # size 1000x700
+
+# --- F11: paste-proof password (typed as real keystrokes; works in PuTTY) ----
+# Focus the SSH/RDP window, then TYPE the password - not a clipboard paste,
+# so it works where Ctrl+V / right-click paste is blocked.
+::: pw_type ! Ctrl+Shift+F11
+"PuTTY" winactivate_substr
+400 wait
+"myS3cretPass!" type
+enter
+
+# --- F12: paste-proof password from the CLIPBOARD ---------------------------
+# Copy the password anywhere (Ctrl+C), focus the target field, then press this:
+# clipget pushes the clipboard text, type sends it as keystrokes.
+::: pw_from_clip ! Ctrl+Shift+F12
+clipget type
+enter

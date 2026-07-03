@@ -1,0 +1,45 @@
+# tests/snippets_winctrls.txt — winctrls discovery primitive
+#
+# Lists every child control of a named window so you can pick the
+# right class arg for expect_ctrl_text. ( "title" -- )
+#
+# Setup before running:
+#   1. Open whatever target you want to probe (Notepad, Notepad++,
+#      Excel, Visual Studio, etc.) — make sure its title matches.
+#   2. Edit the snippet bodies below to the exact titles.
+#
+# Launch:
+#   color_iw.exe tests/snippets_winctrls.txt
+#
+# Run:
+#   Ctrl+Shift+1  — probe classic Notepad
+#   Ctrl+Shift+2  — probe Notepad++
+#   Ctrl+Shift+3  — probe cf22 itself (expected empty enumeration —
+#                   cf22 paints its own UI with no child controls)
+#
+# Each press appends a block to color_debug.log:
+#   [CTRLS] title="..." parent=NNNNNNNN
+#     child=NNNNNNNN  class="..."  text="..."
+#     child=NNNNNNNN  class="..."  text="..."
+#     ...
+#
+# Strip trailing digits from a class name when feeding it to
+# expect_ctrl_text — FindWindowExA wants the raw class.
+
+::: tWC_notepad ! Ctrl+Shift+1
+"*Untitled - Notepad" winctrls
+
+::: tWC_npp ! Ctrl+Shift+2
+"new 27 - Notepad++" winctrls
+
+::: tWC_cf22 ! Ctrl+Shift+3
+"ColorForth 22 for Win32" winctrls
+
+# Substring-match variant — finds the target via EnumWindows.
+# Title doesn't have to match exactly. Use when Notepad++ tab focus
+# or file name keeps changing the title bar.
+::: tWC_npp_in ! Ctrl+Shift+4
+"Notepad++" winctrls_in
+
+::: tWC_notepad_in ! Ctrl+Shift+5
+"Notepad" winctrls_in

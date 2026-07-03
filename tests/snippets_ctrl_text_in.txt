@@ -1,0 +1,42 @@
+# tests/snippets_ctrl_text_in.txt — expect_ctrl_text_in smoke test
+#
+# expect_ctrl_text_in ( "title_substr" "class" "expected" -- )
+#   Substring-match variant of expect_ctrl_text. EnumWindows resolves
+#   the parent by substring title; then identical FindWindowExA +
+#   WM_GETTEXT + substring path as the exact variant. Use when the
+#   title fluctuates (Notepad++ tab focus, locale, etc.).
+#
+# Setup before running:
+#   - Open Notepad++ with at least one file/tab. ANY title containing
+#     "Notepad++" matches — substring resolves it.
+#
+# Launch:
+#   color_iw.exe tests/snippets_ctrl_text_in.txt
+#
+# Run:
+#   Ctrl+Shift+7  — substring "Notepad++", class "Scintilla",
+#                   expect substring "" (always passes since the
+#                   first Scintilla's content includes anything)
+#   Ctrl+Shift+8  — substring "Notepad++", class "Scintilla",
+#                   expect impossible needle (FAIL=text)
+#   Ctrl+Shift+9  — substring "no_window", expect FAIL=win
+#   Ctrl+Shift+6  — classic Notepad: substring "Notepad", class "Edit",
+#                   expect substring "" (passes if Notepad open with
+#                   any content)
+
+::: tECTI_pass ! Ctrl+Shift+7
+"ect_in_npp" tname
+"Notepad++" "Scintilla" "" expect_ctrl_text_in
+
+::: tECTI_fail_text ! Ctrl+Shift+8
+"ect_in_npp_miss" tname
+"Notepad++" "Scintilla" "zzz_does_not_exist_zzz" expect_ctrl_text_in
+
+::: tECTI_fail_win ! Ctrl+Shift+9
+"ect_in_bad_window" tname
+"no_window_xyz123" "Edit" "anything" expect_ctrl_text_in
+
+::: tECTI_notepad ! Ctrl+Shift+6
+"ect_in_notepad" tname
+"- Notepad" "Edit" "" expect_ctrl_text_in
+tsummary

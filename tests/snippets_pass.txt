@@ -1,0 +1,19 @@
+# tests/snippets_pass.txt — all-PASS smoke set
+# Launch: color_iw.exe tests/snippets_pass.txt
+# Then press Ctrl+Shift+F1.
+# Expected: [TEST RUN] 00000004 pass, 00000000 fail
+
+::: tP_all ! Ctrl+Shift+B
+"p1_explicit_pass" tname
+tpass
+"p2_window_self" tname
+"ColorForth 22 for Win32" expect_window
+tpass
+"p3_pixel_in_tol" tname
+; almost certainly within tolerance 255 of anything — overshoot guarantees pass
+0 0 0 255 expect_pixel
+tpass
+"p4_img_present" tname
+"Images\OpenButton.bmp" 50 expect_img
+tpass
+tsummary

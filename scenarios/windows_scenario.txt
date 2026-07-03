@@ -1,0 +1,51 @@
+# =============================================================================
+#  Window automation - launch, focus, drive, and close windows from hotkeys.
+#    The natural pairing:  run -> winwait -> type/key/click -> winclose
+#  Plus paste-proof password entry via type (real keystrokes, not Ctrl+V).
+#
+#  LOAD:   lal4s.exe scenarios\windows_scenario.txt
+#  Hotkeys: Ctrl+Shift+F8..F12.
+# =============================================================================
+
+# --- F8: full launch -> drive -> close cycle (Notepad) ----------------------
+::: win_notepad ! Ctrl+Shift+F8
+"notepad" run
+"Untitled - Notepad" 3000 winwait
+"Hello from lal4s automation" type
+enter
+"driven by  run -> winwait -> type -> winclose" type
+"home" key
+1000 wait
+"Notepad" winclose
+600 wait
+"alt+n" send                     # "Don't Save" on Notepad's close prompt, if any
+
+# --- F9: focus an existing window by title substring, drive it, minimize ----
+::: win_drive ! Ctrl+Shift+F9
+"Notepad" winactivate_substr     # substring match - survives title changes
+300 wait
+"end" key
+"  ...appended by lal4s" type
+"Notepad" winmin
+
+# --- F10: tidy a window - move + resize by substring ------------------------
+::: win_tidy ! Ctrl+Shift+F10
+"Notepad" winactivate_substr
+0 0 "Notepad" winmove            # top-left corner
+1000 700 "Notepad" winsize       # size 1000x700
+
+# --- F11: paste-proof password (typed as real keystrokes; works in PuTTY) ----
+# Focus the SSH/RDP window, then TYPE the password - not a clipboard paste,
+# so it works where Ctrl+V / right-click paste is blocked.
+::: pw_type ! Ctrl+Shift+F11
+"PuTTY" winactivate_substr
+400 wait
+"myS3cretPass!" type
+enter
+
+# --- F12: paste-proof password from the CLIPBOARD ---------------------------
+# Copy the password anywhere (Ctrl+C), focus the target field, then press this:
+# clipget pushes the clipboard text, type sends it as keystrokes.
+::: pw_from_clip ! Ctrl+Shift+F12
+clipget type
+enter

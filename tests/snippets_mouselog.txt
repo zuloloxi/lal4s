@@ -1,0 +1,33 @@
+# tests/snippets_mouselog.txt — mouselog calibration helper
+#
+# mouselog ( -- ) reads the current cursor position via GetCursorPos
+# and the desktop COLORREF beneath it via GetPixel, then logs:
+#   [MOUSE] x=NNNNNNNN y=NNNNNNNN color=00BBGGRR
+#
+# Workflow to build a 3-pixel fingerprint for pix3eq:
+#   1. Position cf22 so the glyph/region you want to fingerprint
+#      is visible.
+#   2. Hover the mouse over the FIRST distinctive pixel of the
+#      glyph.
+#   3. Press Ctrl+Shift+1 — log captures pixel 1.
+#   4. Move mouse to the SECOND pixel, press Ctrl+Shift+1 again.
+#   5. Move to the THIRD pixel, press Ctrl+Shift+1 again.
+#   6. Open color_debug.log and read the three lines:
+#        [MOUSE] x=00000200 y=00000190 color=00FF0000
+#        [MOUSE] x=00000202 y=00000190 color=00FF0001
+#        [MOUSE] x=00000200 y=00000192 color=00FF0002
+#   7. Copy values into a pix3eq invocation, e.g.:
+#        0x200 0x190 0xFF0000  0x202 0x190 0xFF0001  0x200 0x192 0xFF0002  10 pix3eq
+#
+# Use Ctrl+Shift+2 to also flash a debug_box at the cursor
+# position so you can visually verify which pixel you sampled.
+
+::: tML_log ! Ctrl+Shift+1
+mouselog
+
+::: tML_log_with_box ! Ctrl+Shift+2
+# Log the cursor pixel + flash a 10x10 box around it.
+# Note: SetCursorPos isn't called — debug_box takes the rect we
+# pass, not the cursor pos, so this is approximate. Use Ctrl+Shift+1
+# alone for precise sampling.
+mouselog

@@ -1,0 +1,56 @@
+# tests/snippets_statusbar_in.txt — expect_statusbar_in smoke test
+#
+# expect_statusbar_in ( "title_substr" partN "expected" -- )
+#   EnumWindows substring match for the target window, then
+#   SendMessageA(SB_GETTEXTA partN) with WM_GETTEXT fallback.
+#
+# This solves the title-brittleness loop: when Notepad++ active tab
+# changes from "new 27" to "new 41" to "filename.cpp", the exact-
+# title FindWindowA fails. Substring "Notepad++" matches all of them.
+#
+# Setup before running:
+#   - Open Notepad++ with at least one file/tab. Tab focus / name
+#     doesn't matter — substring "Notepad++" always finds it.
+#
+# Launch:
+#   color_iw.exe tests/snippets_statusbar_in.txt
+#
+# Run:
+#   Ctrl+Shift+B  — substring "Notepad++", part 0, expect "text file"
+#                   (matches "Normal text file" via WM_GETTEXT fallback)
+#                   → expect PASS
+#   Ctrl+Shift+N  — substring "Notepad++", part 0, expect "zzz_miss"
+#                   → expect FAIL=text
+#   Ctrl+Shift+M  — substring "no_such_window", expect FAIL=win
+#
+# Expected log per call (the trace prefix is shared with
+# expect_statusbar — distinguish via the preceding [HOTKEY] line):
+#   [HOTKEY] fired id=NNNN short="tESBI_..."
+#   [ESB] title="<actual matched title>" part=00000000 parent=NNNN
+#         sbar=NNNN got="Normal text file" want="text file" PASS
+
+# NOTE: Bindings use DIGITS (7/8/9) to avoid collision with Notepad++
+# shortcuts. Letter (B) and F-key (F11) bindings both triggered a
+# destructive action in user's NPP setup (likely a plugin remap),
+# closing Notepad++ mid-call → SendMessageTimeoutA hit smto_eax=0
+# because the hwnd was destroyed before the message arrived.
+# winctrls's Ctrl+Shift+2 ran fine, so digit chords appear safe.
+::: tESBI_pass ! Ctrl+Shift+7
+"esb_in_npp_normal" tname
+"Notepad++" 0 "text file" expect_statusbar_in
+
+::: tESBI_fail_text ! Ctrl+Shift+8
+"esb_in_npp_missing" tname
+"Notepad++" 0 "zzz_does_not_exist_zzz" expect_statusbar_in
+
+::: tESBI_fail_win ! Ctrl+Shift+9
+"esb_in_bad_window" tname
+"no_such_window_xyz123" 0 "anything" expect_statusbar_in
+
+# Classic Notepad target — doesn't have NPP's mysterious close-on-any-
+# shortcut behavior. Setup: open notepad.exe, enable View > Status Bar,
+# type any character so cursor moves (Ln 1, Col N appears).
+::: tESBI_notepad ! Ctrl+Shift+6
+"esb_in_notepad_ln" tname
+"- Notepad" 0 "Ln" expect_statusbar_in
+tsummary

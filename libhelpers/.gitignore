@@ -1,0 +1,25 @@
+# VS2022 IDE state
+.vs/
+*.suo
+*.user
+
+# Build intermediates
+*.obj
+*.pch
+*.iobj
+*.ipdb
+*.pdb
+*.tlog/
+*.lastbuildstate
+*.recipe
+*.log
+*.exp
+Backup/
+UpgradeLog.htm
+
+# Keep:
+#   helpers.dll (the binary cf22 loads)
+#   helpers.lib (export library, useful for static linking)
+#   helpers.sln, helpers.def
+#   helpers/*.cpp, helpers/*.h, helpers/*.vcxproj*
+#   Readme, License, How to compile

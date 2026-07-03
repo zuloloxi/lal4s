@@ -1,0 +1,34 @@
+# tests/snippets_debug_box.txt — debug_box visual rect overlay
+#
+# debug_box ( L T R B ms -- )
+#   Flashes an XOR-drawn outline of the rect (L,T)-(R,B) on screen
+#   for ms milliseconds. Lets you SEE where imgfindin / pixelwait /
+#   expect_img is actually looking when authoring search rects.
+#
+# IMPORTANT — requires helpers.dll rebuilt with the new DebugBox
+# export. If color_debug.log shows:
+#   === helpers.dll DebugBox fn=00000000
+# then your committed helpers.dll predates this primitive — rebuild
+# the VS2022 project at lib_cf22_h/helpers/ first.
+#
+# Launch:
+#   color_iw.exe tests/snippets_debug_box.txt
+#
+# Run:
+#   Ctrl+Shift+7  — flash a 400x300 rect near top-left for 1s
+#   Ctrl+Shift+8  — flash a small rect (200x100) near center for 500ms
+#   Ctrl+Shift+9  — flash a thin horizontal strip (full width, 50px tall)
+#
+# What you should see: a red/inverted outline rectangle appear on
+# screen, hold for the duration, then disappear (XOR self-erases).
+#
+# Coordinates are screen-absolute (top-left = 0,0).
+
+::: tDBG_topleft ! Ctrl+Shift+7
+100 100 500 400 1000 debug_box
+
+::: tDBG_center ! Ctrl+Shift+8
+600 400 800 500 500 debug_box
+
+::: tDBG_strip ! Ctrl+Shift+9
+0 200 1920 250 800 debug_box

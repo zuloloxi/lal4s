@@ -1,0 +1,38 @@
+# tests/web_local_fail_tests.txt — negative web tests vs the local server.
+#
+# START THE SERVER FIRST (separate terminal):
+#   node tests/webserver/server.js        (or tests\webserver\start.bat)
+#
+# Launch:  color_iw.exe tests/web_local_fail_tests.txt
+# Run all: Press Ctrl+Shift+W.
+# Verify:  runtests.bat (non-zero exit) or read color_debug.log
+#
+# Expected: [TEST RUN] 00000000 pass, 00000003 fail
+#
+# bad.html fires its console.error / uncaught throw / 404 image / 500
+# fetch ON LOAD. weburl's CdpConnect drives the tab via Page.navigate
+# AFTER enabling the CDP domains, so the load-time events are captured.
+# A short wait lets the async fetch (500) event land.
+
+::: webLF_all ! Ctrl+Shift+W
+
+# locf1 — expect_no_console_errors CATCHES the page's errors (FAIL):
+#   the console.error + the uncaught exception.
+"locf1_console_errors_caught" tname
+"http://localhost:8722/bad.html" 9222 weburl
+800 wait
+expect_no_console_errors
+
+# locf2 — expect_no_net_failures CATCHES the failed requests (FAIL):
+#   /missing.png 404 + /api/fail 500.
+"locf2_net_failures_caught" tname
+expect_no_net_failures
+
+# locf3 — webwatch DETECTS the broken page (FAIL): bad.html's uncaught
+# exception aborts its init script, so window.cf22Ready is never set.
+# webwatch logs "page broke" on the first tick and fails the test.
+"locf3_watch_detects_broken" tname
+"window.cf22Ready === true" 400 3 webwatch
+
+webclose
+tsummary

@@ -1,0 +1,37 @@
+# tests/web_local_tests.txt — positive web tests vs the local Node server.
+#
+# START THE SERVER FIRST (separate terminal):
+#   node tests/webserver/server.js        (or tests\webserver\start.bat)
+#
+# Launch:  color_iw.exe tests/web_local_tests.txt
+# Run all: Press Ctrl+Shift+W.
+# Verify:  runtests.bat  (or read color_debug.log)
+#
+# Expected: ALL PASS — [TEST RUN] 00000004 pass, 00000000 fail
+#
+# Unlike example.com, the good page has NO favicon 404 (server returns
+# 204), so expect_no_net_failures passes directly — no webclear needed.
+
+::: webL_all ! Ctrl+Shift+W
+
+# loc1 — page loads + renders: h1#main present, title exact.
+"loc1_good_renders" tname
+"http://localhost:8722/good.html" 9222 weburl
+"#main" expect_dom
+"document.title === 'cf22 Good Page'" expect_js
+
+# loc2 — clean page: zero console errors.
+"loc2_no_console_errors" tname
+expect_no_console_errors
+
+# loc3 — clean page: zero network failures (favicon is 204, not 404).
+"loc3_no_net_failures" tname
+expect_no_net_failures
+
+# loc4 — supervise: page stays healthy across 4 ticks. The good page's
+# init script ran, so window.cf22Ready === true the whole window.
+"loc4_watch_stays_healthy" tname
+"window.cf22Ready === true" 400 4 webwatch
+
+webclose
+tsummary

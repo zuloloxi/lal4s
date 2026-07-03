@@ -1,0 +1,23 @@
+# tests/snippets_winshot.txt — WinShot smoke test
+#
+# Setup:
+#   1. Open Notepad (just notepad.exe — leave "Untitled - Notepad" title)
+#   2. Minimize it or cover it with another window (this is the point —
+#      verify PrintWindow captures it even when not visible to BitBlt).
+#
+# Launch:
+#   color_iw.exe tests/snippets_winshot.txt
+#
+# Run:
+#   Press Ctrl+Shift+W.
+#
+# Expected:
+#   - File tests\out_notepad.bmp created
+#   - color_debug.log contains:
+#       === helpers.dll WinShot fn=<nonzero>
+#       WinShot title="Untitled - Notepad" out="tests\out_notepad.bmp" result=00000001
+#   - Open the BMP and verify Notepad window content is visible
+#     (even though it was minimized/covered during capture)
+
+::: tWS_grab ! Ctrl+Shift+W
+"ColorForth 22 for Win32" "tests\out_cf22.bmp" winshot

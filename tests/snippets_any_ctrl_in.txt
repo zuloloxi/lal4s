@@ -1,0 +1,43 @@
+# tests/snippets_any_ctrl_in.txt — expect_any_ctrl_text_in smoke test
+#
+# expect_any_ctrl_text_in ( "title_substr" "class" "expected" -- )
+#   Best primitive for "is file X open in some Notepad++ tab?".
+#   Substring window match + scan-all classes:
+#     1. EnumWindows finds first window whose title CONTAINS substr
+#     2. Walk every child of `class` in that window (FindWindowExA loop)
+#     3. WM_GETTEXT each, substring-match against `expected`
+#     4. PASS on first match, FAIL=text after exhausting all children
+#
+# Setup before running:
+#   - Open Notepad++ with multiple tabs, at least one containing some
+#     identifiable substring (the "axelor-bpm" / xml content / etc.
+#     you already had open works fine).
+#
+# Launch:
+#   color_iw.exe tests/snippets_any_ctrl_in.txt
+#
+# Run:
+#   Ctrl+Shift+7  — substring "Notepad++" + class "Scintilla" + "axelor"
+#                   should match in the Maven pom.xml tab (PASS at
+#                   whichever Scintilla has it)
+#   Ctrl+Shift+8  — same target with "Reading file" — matches the
+#                   OkadWork.cf-pasted tab content (PASS)
+#   Ctrl+Shift+9  — impossible needle → FAIL=text after scanning all
+#   Ctrl+Shift+6  — substring "no_such_window" → FAIL=win
+
+::: tEACI_axelor ! Ctrl+Shift+7
+"eaci_npp_axelor" tname
+"Notepad++" "Scintilla" "axelor" expect_any_ctrl_text_in
+
+::: tEACI_reading ! Ctrl+Shift+8
+"eaci_npp_reading" tname
+"Notepad++" "Scintilla" "Reading file" expect_any_ctrl_text_in
+
+::: tEACI_miss ! Ctrl+Shift+9
+"eaci_npp_miss" tname
+"Notepad++" "Scintilla" "zzz_does_not_exist_zzz" expect_any_ctrl_text_in
+
+::: tEACI_failwin ! Ctrl+Shift+6
+"eaci_bad_window" tname
+"no_window_xyz123" "Edit" "anything" expect_any_ctrl_text_in
+tsummary

@@ -1,0 +1,35 @@
+# tests/snippets_no_statusbar.txt — expect_no_statusbar_in smoke test
+#
+# expect_no_statusbar_in ( "title_substr" partN "expected" -- )
+#   Inverse-substring status bar assertion: PASSes when the needle
+#   is NOT in the matched window's status bar text. Vacuously
+#   passes when the window doesn't exist or has no
+#   msctls_statusbar32 child.
+#
+# Notepad++ status bar part 0 typically shows the document type
+# (e.g. "Normal text file"). We assert various things are NOT there.
+#
+# Launch:
+#   color_iw.exe tests/snippets_no_statusbar.txt
+#
+# Run:
+#   Ctrl+Shift+1  — assert NO "Binary" in Notepad++ status part 0.
+#                   PASS (status bar shows "Normal text file" — no "Binary").
+#   Ctrl+Shift+2  — assert NO "Normal" in Notepad++ status part 0.
+#                   FAIL (status bar DOES contain "Normal text file")
+#                   — exercises the FAIL path with a diagnostic.
+#   Ctrl+Shift+3  — assert NO needle in non-existent window. PASS
+#                   (vacuously absent).
+
+::: tNSB_pass ! Ctrl+Shift+1
+"no_statusbar_binary" tname
+"Notepad++" 0 "Binary" expect_no_statusbar_in
+
+::: tNSB_fail ! Ctrl+Shift+2
+"no_statusbar_normal_should_fail" tname
+"Notepad++" 0 "Normal" expect_no_statusbar_in
+
+::: tNSB_no_window ! Ctrl+Shift+3
+"no_statusbar_no_window" tname
+"no_window_xyz123" 0 "anything" expect_no_statusbar_in
+tsummary

@@ -1,0 +1,55 @@
+# tests/web_tests.txt — CDP web-automation self-tests (Phase 4)
+#
+# Exercises the color_iw web primitives that drive Edge over the
+# DevTools Protocol (helpers.dll CDP client):
+#   weburl / webeval / expect_dom / expect_js /
+#   expect_no_console_errors / expect_no_net_failures / webclear / webclose
+#
+# Launch:
+#   color_iw.exe tests/web_tests.txt
+#
+# Run all:
+#   Press Ctrl+Shift+W.
+#   (weburl launches a dedicated Edge debug profile on port 9222 and
+#    connects — the FIRST run blocks ~1-10s while Edge starts.)
+#
+# Verify:
+#   runtests.bat        (or read color_debug.log)
+#
+# Expected: ALL PASS — [TEST RUN] 00000004 pass, 00000000 fail
+
+::: web_all ! Ctrl+Shift+W
+
+# t1 — page loads and renders: launch+connect, then assert the page's
+# <h1> exists and the title is exactly right.  Proves weburl +
+# expect_dom + expect_js end to end.
+"web1_loads_and_renders" tname
+"https://example.com" 9222 weburl
+"h1" expect_dom
+"document.title === 'Example Domain'" expect_js
+
+# t2 — no console errors on a clean page.  (expect_no_net_failures is
+# intentionally NOT asserted here: a missing /favicon.ico 404 is a real
+# network failure the tool would correctly flag — see the C-2 self-test
+# CdpC2SelfTestRun which proves both buckets.)
+"web2_no_console_errors" tname
+expect_no_console_errors
+
+# t3 — webwatch: supervise the page for 4 ticks, 500 ms apart, with a
+# health expression. PASS if it stays healthy the whole window; each
+# tick logs "[webwatch] OK: ..." to color_debug.log.
+"web3_watch_stays_healthy" tname
+"document.readyState === 'complete'" 500 4 webwatch
+
+# t4 — expect_no_net_failures on the real page. The initial load
+# fetches /favicon.ico, which bare example.com 404s (a genuine network
+# failure the tool correctly captures). So webclear resets the capture
+# first; the now-idle, fully-loaded static page yields zero NEW failed
+# requests. This is the standard "clear, reach a checkpoint, assert no
+# failures" pattern for net assertions on real pages.
+"web4_no_net_failures" tname
+webclear
+expect_no_net_failures
+
+webclose
+tsummary

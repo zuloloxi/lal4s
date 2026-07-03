@@ -1,0 +1,41 @@
+# tests/snippets_findwin.txt — findwin_substr smoke test
+#
+# findwin_substr ( "substr" -- hwnd )
+#   EnumWindows-based discovery: returns hwnd of the first top-level
+#   window whose title CONTAINS the substring. Pushes 0 if no match.
+#   Solves the title-bar-bytes-must-match-exactly brittleness of
+#   FindWindowA (Notepad++ tab name fluctuations, locale strings, etc).
+#
+# Setup before running:
+#   - Open at least one of: Notepad++, classic Notepad, Explorer.
+#   - Any title containing the substring will match — you do NOT need
+#     to know the active tab / file name.
+#
+# Launch:
+#   color_iw.exe tests/snippets_findwin.txt
+#
+# Run:
+#   Ctrl+Shift+P  — match "Notepad++"  (substring)
+#   Ctrl+Shift+Q  — match "Notepad"    (matches both Notepad and Notepad++)
+#   Ctrl+Shift+R  — match "cf22"       (matches color_iw's own window)
+#   Ctrl+Shift+Z  — search for impossible string (expect "no match")
+#
+# Expected log per call:
+#   [FWS] substr="Notepad++" matched hwnd=NNNNNNNN title="new 27 - Notepad++"
+#   or
+#   [FWS] substr="zzzzzz" no top-level window matched
+#
+# Result hwnd is pushed onto the script stack but no other primitive
+# consumes it in this test — the log line is the proof.
+
+::: tFWS_npp ! Ctrl+Shift+P
+"Notepad++" findwin_substr
+
+::: tFWS_notepad ! Ctrl+Shift+Q
+"Notepad" findwin_substr
+
+::: tFWS_cf22 ! Ctrl+Shift+R
+"cf22" findwin_substr
+
+::: tFWS_miss ! Ctrl+Shift+Z
+"zzzzz_impossible_title_zzzzz" findwin_substr

@@ -1,0 +1,84 @@
+# tests/snippets_pixel_avg.txt — expect_pixel_avg simple smoke test
+#
+# What this tests:
+#   expect_pixel_avg ( x y color tol -- ) — samples a 3x3 grid at
+#   screen pixel (x,y), averages the 9 readings per channel, then
+#   asserts the result is within `tol` per channel of `color`.
+#
+# Why bother (vs single-pixel expect_pixel):
+#   Anti-aliasing at text edges and gradient borders can land a
+#   single-pixel sample on a transition. 3x3 average smooths over
+#   those edges, making solid-color region assertions reliable.
+#
+# Test setup — uses cf22's own colored display, NO external app:
+#   1. Make cf22 window visible on screen
+#   2. cf22 paints: blue background, green rect (middle), red rect
+#      (right), magenta "22", red "colorForth" header.
+#   3. The bindings below sample known regions and assert their
+#      colors. Adjust x/y if cf22 is at a different screen position.
+#
+# COLORREF format: 0x00BBGGRR (Win32 byte order).
+#   pure red    = 0x000000FF
+#   pure green  = 0x0000FF00
+#   pure blue   = 0x00FF0000
+#   pure white  = 0x00FFFFFF
+#
+# Workflow:
+#   - Press Ctrl+Shift+5 first to visually see WHERE we're sampling
+#     (debug_box flashes a small rect at the sample coord for 1 sec)
+#   - Press Ctrl+Shift+6 to PASS test (assert blue at that point)
+#   - Press Ctrl+Shift+7 to FAIL test (assert red — won't match)
+#
+# Expected log:
+#   [HOTKEY] fired ... short="tEPA_pass"
+#   [TEST pixel_avg_pass] BEGIN
+#   [TEST pixel_avg_pass] PASS         ← success (implicit via tsummary)
+#
+#   [HOTKEY] fired ... short="tEPA_fail"
+#   [TEST pixel_avg_fail] BEGIN
+#   [TEST pixel_avg_fail] FAIL: expect_pixel mismatch x=NN y=NN
+#       got=00BBGGRR want=000000FF tol=00000010
+#
+# The got=NNNN value in the FAIL line tells you the ACTUAL averaged
+# color at that screen position — copy it into the snippet for a
+# guaranteed PASS, calibrating to your screen.
+
+# IMPORTANT: cf22 script tokenizer is DECIMAL-ONLY. No 0x prefix.
+# COLORREF format Win32 = 0x00BBGGRR. Common values as decimal:
+#   pure blue  (0xFF0000) = 16711680
+#   pure green (0x00FF00) =    65280
+#   pure red   (0x0000FF) =      255
+#   pure white (0xFFFFFF) = 16777215
+#
+# Coordinates target the MIDDLE of typical screen (~500, ~400) so the
+# rect should land inside cf22's blue background area when cf22 is
+# visible roughly centered. Adjust if your cf22 is elsewhere.
+
+::: tEPA_show_box ! Ctrl+Shift+5
+470 380 530 420 1000 debug_box
+
+::: tEPA_pass ! Ctrl+Shift+6
+# Hex literals now work (since commit shipping hex support in
+# rs_number tokenizer). COLORREF format: 0xBBGGRR. Pure blue =
+# 0xFF0000. Tolerance = 0x20 (32 decimal).
+"pixel_avg_expect_blue" tname
+500 400 0xFF0000 0x20 expect_pixel_avg
+tsummary
+
+::: tEPA_red ! Ctrl+Shift+7
+# Asserts pure red (0xFF in low byte = R channel). PASS or FAIL
+# depends on cf22 position relative to the sample point (500, 400).
+# When cf22's blue area covers the point: FAIL (got=blue, want=red,
+# diff=247 vastly exceeds tol). When cf22's red area covers it: PASS.
+"pixel_avg_expect_red" tname
+500 400 0xFF 0x20 expect_pixel_avg
+tsummary
+
+# expect_pixel_any — PASS if ANY of the 3×3 samples matches.
+# Useful for text edges: center pixel might be the foreground color
+# (text) but the corners catch the background. Asserting background
+# blue with expect_pixel_any at a text edge → PASS.
+::: tEPY_blue ! Ctrl+Shift+8
+"pixel_any_expect_blue" tname
+500 400 0xFF0000 0x20 expect_pixel_any
+tsummary

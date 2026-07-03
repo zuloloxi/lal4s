@@ -1,0 +1,45 @@
+# tests/snippets_any_ctrl.txt — expect_any_ctrl_text smoke test
+#
+# Validates the scan-all variant against Notepad++ with multiple
+# files open. Walks every child of the given class via FindWindowExA
+# chaining, PASSes the moment one matches.
+#
+# Setup before running:
+#   1. Open Notepad++ with several files / tabs.
+#   2. In at least one tab, type a unique marker line, e.g.:
+#        cf22_scan_marker_zZ9
+#      Save (or don't — Notepad++ keeps unsaved content per tab).
+#   3. Switch to a DIFFERENT tab so the marker is in a hidden Scintilla.
+#      This proves the scan walks all Scintillas, not just the visible one.
+#   4. Note Notepad++'s current title (depends on active tab):
+#        "new 41 - Notepad++"   or   "filename - Notepad++"
+#
+# Launch:
+#   color_iw.exe tests/snippets_any_ctrl.txt
+#
+# Run:
+#   Ctrl+Shift+A  — scan all Scintillas for the marker (expected PASS)
+#   Ctrl+Shift+S  — scan for a string that doesn't exist (expected FAIL=text)
+#   Ctrl+Shift+D  — scan for a class that doesn't exist (expected FAIL=ctl)
+#
+# Expected color_debug.log per call:
+#   [EAC] title="..." class="Scintilla" want="cf22_scan_marker_zZ9" parent=NNNN
+#     child=NNNNNNNN  got="first 40 chars..."  no-match
+#     child=NNNNNNNN  got="first 40 chars..."  no-match
+#     child=NNNNNNNN  got="cf22_scan_marker_zZ9..."  MATCH
+#   [EAC] PASS — matched at child=NNNN (after scanning NN children)
+#
+# Adjust the title strings below to match your Notepad++ instance.
+
+::: tEAC_marker ! Ctrl+Shift+A
+"any_scintilla_marker" tname
+"new 41 - Notepad++" "Scintilla" "Reading file" expect_any_ctrl_text
+
+::: tEAC_miss ! Ctrl+Shift+S
+"any_scintilla_miss" tname
+"new 41 - Notepad++" "Scintilla" "zzzz_string_that_should_not_exist_zzz" expect_any_ctrl_text
+
+::: tEAC_badclass ! Ctrl+Shift+D
+"any_scintilla_badclass" tname
+"new 41 - Notepad++" "NotARealClass" "anything" expect_any_ctrl_text
+tsummary

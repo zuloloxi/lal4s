@@ -1,0 +1,52 @@
+# tests/snippets_no_img_in.txt — expect_no_img_in smoke test
+#
+# expect_no_img_in ( "title_substr" "fname" tol -- )
+#   Inverse-substring image search. PASS when the image is NOT
+#   visible within the bounds of any window matching `title_substr`.
+#   FAIL when the image IS found within those bounds.
+#   Vacuous PASS if no window matches the substring.
+#
+# Setup before running:
+#   - Need at least one BMP file findable on disk. tests/Coc-14.jpg
+#     exists from earlier work but ImageSearch DLL wants .bmp.
+#   - Reuse tests/out_cf22.bmp (the WinShot capture from earlier).
+#     That bitmap shows cf22's own UI, so searching for it within
+#     cf22's own window bounds when cf22 displays the same scene
+#     should match → FAIL (a real "image present in matched window"
+#     trigger).
+#
+# Launch:
+#   color_iw.exe tests/snippets_no_img_in.txt
+#
+# Run:
+#   Ctrl+Shift+1  — assert NO out_cf22.bmp visible within ColorForth
+#                   window bounds. If cf22's display still matches
+#                   the captured BMP → FAIL. If cf22's display
+#                   changed since capture → PASS.
+#   Ctrl+Shift+2  — assert NO image in non-existent window. Vacuous
+#                   PASS regardless of cf22 state.
+
+# WARNING: needle BMP must fit inside the search rect. The ImageSearch
+# DLL doesn't bounds-check and will fault if needle > rect. Earlier
+# experiment with out_cf22.bmp (1024x852) against cf22's smaller
+# window crashed in the DLL pixel-compare inner loop.
+
+::: tNII_missing_file ! Ctrl+Shift+1
+# Reference a BMP that doesn't exist — DLL returns "0" (not found)
+# → primitive PASSes (vacuous: needle never present if file missing).
+"no_img_in_missing_file" tname
+"ColorForth" "tests\does_not_exist.bmp" 10 expect_no_img_in
+
+::: tNII_oversize ! Ctrl+Shift+3
+# Re-runs the previously-crashing oversized-needle case. out_cf22.bmp
+# (1024x852) against cf22's smaller current window. With the helpers.dll
+# bounds guard, this should now return "not found" instead of crashing
+# in the DLL pixel-compare loop → vacuous PASS.
+"no_img_in_oversize_was_crash" tname
+"ColorForth" "tests\out_cf22.bmp" 10 expect_no_img_in
+
+::: tNII_no_window ! Ctrl+Shift+2
+# Substring matches no window → vacuous PASS regardless of file state.
+"no_img_in_no_window" tname
+"no_window_xyz123" "tests\out_cf22.bmp" 10 expect_no_img_in
+tsummary

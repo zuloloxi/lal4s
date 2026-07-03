@@ -1,0 +1,31 @@
+# tests/smoke.txt — lal4s-native all-PASS smoke set
+#
+# Uses ONLY commands lifted into this build, and no cf22/Forth window —
+# so it runs green in a normal desktop environment.
+#
+# Launch:  lal4s.exe tests\smoke.txt
+# Run:     press Ctrl+Shift+B
+# Verify:  runtests.bat        (reads lal4s_debug.log)
+# Expect:  [TEST RUN] 00000003 pass, 00000000 fail
+#
+# Note: test p3 launches Notepad and leaves it open.
+
+::: smoke ! Ctrl+Shift+B
+
+# p1 — explicit pass marker (no environment dependency)
+"p1_explicit_pass" tname
+tpass
+
+# p2 — pixel read within tolerance 255 always matches (sanity of the
+#      GetPixel + pixel_within_tol path)
+"p2_pixel_in_tol" tname
+0 0 0 255 expect_pixel
+
+# p3 — run + winwait + expect_window: launch Notepad, wait up to 3s for
+#      its window, then assert it exists
+"p3_notepad_launch" tname
+"notepad" run
+"Untitled - Notepad" 3000 winwait
+"Untitled - Notepad" expect_window
+
+tsummary

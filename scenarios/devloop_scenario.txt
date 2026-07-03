@@ -1,0 +1,41 @@
+# =============================================================================
+#  Natural dev loop - edit your web app, press ONE hotkey, read the verdict.
+#
+#  SETUP:  node tests\webserver\server.js   (or point weburl at YOUR dev server)
+#  LOAD:   lal4s.exe scenarios\devloop_scenario.txt
+#  FLOW:   F6 once to open + connect  ->  F5 after every code change  ->  F7 to close.
+#  Keep lal4s_debug.log tailing; each F5 appends a fresh PASS/FAIL block + values.
+#  Hotkeys: Ctrl+Shift+F5 (check), F6 (open), F7 (close).
+# =============================================================================
+
+# --- F6: open the page + connect ONCE (keep Edge up for the loop) -----------
+::: dev_open ! Ctrl+Shift+F6
+"http://localhost:8722/good.html" 9222 weburl
+1500 wait
+"dev_open" tname
+"#main" expect_dom
+tsummary
+
+# --- F5: the loop - clear logs, reload, re-assert, dump values ---------------
+# Press this after each edit. It reloads the live page (no relaunch), so it
+# catches console errors / failed requests introduced by your change, and the
+# weblog lines let you eyeball state each iteration.
+::: dev_check ! Ctrl+Shift+F5
+webclear
+"location.reload()" webeval
+1200 wait
+"renders" tname
+"#main" expect_dom
+"ready" tname
+"window.cf22Ready === true" expect_js
+"no_console_errors" tname
+expect_no_console_errors
+"no_net_failures" tname
+expect_no_net_failures
+tsummary
+"document.title" weblog
+"document.body.innerText.length" weblog
+
+# --- F7: close the session --------------------------------------------------
+::: dev_close ! Ctrl+Shift+F7
+webclose

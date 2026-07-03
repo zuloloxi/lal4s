@@ -1,0 +1,124 @@
+# tests/snippets_pix3eq_workflow.txt — pix3eq + ShotCap workflow example
+#
+# This file is a template. Replace the placeholder pix3eq line in
+# tFP_check below with the line ShotCap -inspect copied to your
+# clipboard, then run cf22 against this file.
+#
+# Step-by-step:
+#
+# 1. Capture a screenshot showing the glyph/region you want to detect:
+#       ShotCap\x64\Debug\ShotCap.exe -w "ColorForth" -f cf22.png
+#    (or any other capture flags — see -h)
+#
+# 2. Open the capture in the inspector:
+#       ShotCap\x64\Debug\ShotCap.exe -inspect cf22.png
+#
+# 3. Inspector window:
+#       - Mouse or arrow keys move the yellow crosshair
+#       - Shift+Arrow = 10 px steps
+#       - +/- zoom in/out (default 8x)
+#       - Click or press Space to record current pixel as a sample
+#       - After the 3rd sample, a line is printed AND copied to clipboard:
+#           0x00000183 0x00000083 0x00008CFF 0x00000119 0x00000138 0x0000F708 0x00000061 0x0000024D 0x00F70000 10 pix3eq
+#       - R resets samples, ESC closes
+#
+# 4. Replace the placeholder line below with the clipboard contents.
+#
+# 5. Launch cf22:
+#       color_iw.exe tests\snippets_pix3eq_workflow.txt
+#
+# 6. Make sure the screen looks the same as when you captured (same window
+#    position, same scene). Press Ctrl+Shift+1.
+#
+# 7. Open color_debug.log. Look for:
+#       [PIX3EQ] result=00000001   → fingerprint matched (scene unchanged)
+#       [PIX3EQ] result=00000000   → fingerprint missed (something changed)
+#
+# Notes:
+#   - Tolerance is the LAST value before `pix3eq` (10 = ±10 per channel).
+#     Raise it (e.g. 20) if matches are too tight, lower for stricter.
+#   - Coordinates are absolute SCREEN coordinates (from desktop GetPixel).
+#     They must match where the captured pixels are on the live screen.
+#   - All 3 fingerprints must match → AND-semantics, so one mismatch fails.
+
+::: tFP_check ! Ctrl+Shift+1
+# Replace the pix3eq line below with what ShotCap -inspect emitted.
+# Placeholder values below are arbitrary — they will almost certainly
+# return result=00000000 on your screen.
+"my_glyph_fingerprint" tname
+0x00000183 0x00000083 0x00008CFF 0x00000119 0x00000138 0x0000F708 0x00000061 0x0000024D 0x00F70000 10 pix3eq
+tsummary
+
+::: tFP_assert ! Ctrl+Shift+3
+# Same fingerprint via expect_pix3eq — drives the test framework's
+# PASS/FAIL counter (not just an inline log line). Use this in real
+# test scripts; on mismatch logs the failing slot (1/2/3) plus the
+# x/y/got/want/tol of the disagreement.
+"my_glyph_fingerprint_asserted" tname
+0x0000003E 0x0000001A 0x00F70000 0x0000003E 0x0000001C 0x000000E7 0x00000040 0x0000001E 0x000000E7 10 expect_pix3eq
+tsummary
+
+::: tFP_calibrate ! Ctrl+Shift+2
+# Alternative live-calibration path: hover the mouse over a pixel and
+# fire this hotkey. mouselog prints "[MOUSE] x= y= color=" once per
+# press. Useful for a single pixel check when ShotCap inspect is
+# overkill, or to verify the screen position before pix3eq fingerprinting.
+mouselog
+
+::: tOCR_run ! Ctrl+Shift+5
+# ocr_digit ( base_x base_y -- digit_or_-1 ) — 3-pixel-fingerprint OCR
+# walker. Tries each digit in the table at base, base-1, base+1 (jitter
+# retry), returns first match or -1.
+#
+# Table (color_iw.asm) currently has digits 2, 9, 4 with offsets
+# calibrated against a specific test image. To test against the LIVE
+# screen:
+#
+#   1. Launch color_iw.exe tests\snippets_pix3eq_workflow.txt  ← enables
+#      all hotkeys (Ctrl+Shift+1..5).
+#   2. Display tests/coc1.png (or any image with that font) in a viewer
+#      at 100% scale, in a side window from cf22.
+#   3. Hover the mouse at the top-LEFT of a known digit. Press
+#      Ctrl+Shift+2 (mouselog) — color_debug.log will get a line:
+#        [MOUSE] x=NNNNNNNN y=NNNNNNNN color=...
+#      Note that x and y are in HEX.
+#   4. EXIT cf22, edit the line below: replace the two 0x00000000s with
+#      the hex x and y from step 3. Save.
+#   5. Relaunch cf22 with this file. Press Ctrl+Shift+5.
+#   6. Check color_debug.log:
+#        [OCR] digit=00000002  → matched "2"
+#        [OCR] digit=00000009  → matched "9"
+#        [OCR] digit=00000004  → matched "4"
+#        [OCR] digit=FFFFFFFF  → -1, no fingerprint matched
+#
+# Replace XXXX YYYY with the actual screen coords of a digit's top-left:
+0x00000513 0x00000044 ocr_digit
+
+::: tFP_gold_2 ! Ctrl+Shift+4
+# CocBot v5 Gold-tint "2" fingerprint test.
+#
+# Source: cocbot5/Clash-Of-Clans-Bot-master_5.6.3/COCBot/functions/Read Text/getDigit.au3
+# (digit "2", $type = "Gold"). The 3-pixel fingerprint at (dx,dy) offsets
+# from the "2" digit's top-left, with the Gold-tinted anti-aliased colors:
+#   (xtl+1, ytl+7) → 0xA09E80
+#   (xtl+3, ytl+6) → 0xD8D4AC
+#   (xtl+7, ytl+7) → 0x979579
+#
+# How to test:
+#   1. Open tests/Coc-14.jpg in a viewer at 100% (Photos/Paint/IrfanView)
+#   2. Hover the mouse at the top-LEFT of a Gold "2" (e.g. in "240 747")
+#   3. Fire Ctrl+Shift+2 (mouselog) → note the screen (sx, sy) from
+#      [MOUSE] x=... y=... color=... in color_debug.log
+#   4. Edit the line below: replace sx with hex sx, sy with hex sy,
+#      then add the offsets:
+#        first arg  = sx + 1 (hex)     fourth arg = sx + 3
+#        second arg = sy + 7           fifth arg  = sy + 6
+#        ... etc.
+#   5. Fire Ctrl+Shift+4. Check color_debug.log for:
+#        [TEST cocbot_gold_2] PASS    → CocBot fingerprints work
+#        FAIL slot=N at got=...       → that offset's color is off
+#
+# PLACEHOLDER (will fail until you replace with real screen coords):
+"cocbot_gold_2" tname
+0x00000001 0x00000007 0x00A09E80 0x00000003 0x00000006 0x00D8D4AC 0x00000007 0x00000007 0x00979579 20 expect_pix3eq
+tsummary

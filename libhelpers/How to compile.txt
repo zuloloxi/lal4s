@@ -1,0 +1,2 @@
+This DLL was built using 
+. Microsoft Visual C++ 2019  (a free compiler)

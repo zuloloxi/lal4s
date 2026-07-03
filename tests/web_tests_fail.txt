@@ -1,0 +1,33 @@
+# tests/web_tests_fail.txt — intentional-FAIL set for webwatch
+#
+# Verifies webwatch FAILS (and logs "webwatch page broke: ...") when a
+# page is broken or becomes broken during the watch window — the
+# negative path of the supervise feature.
+#
+# Launch:
+#   color_iw.exe tests/web_tests_fail.txt
+# Run all:
+#   Press Ctrl+Shift+W.
+# Verify:
+#   runtests.bat (exit code non-zero) or read color_debug.log
+#
+# Expected: [TEST RUN] 00000000 pass, 00000002 fail
+
+::: wF_all ! Ctrl+Shift+W
+
+# wf1 — page breaks MID-WATCH. Schedule body removal ~1s out, then
+# watch !!document.body for up to 6 ticks (500 ms apart). webwatch
+# should log a couple of "OK" ticks, then "webwatch page broke:" when
+# document.body goes away, FAIL the test, and stop early.
+"wf1_breaks_mid_watch" tname
+"https://example.com" 9222 weburl
+"setTimeout(function(){document.body.remove()}, 1000)" webeval
+"!!document.body" 500 6 webwatch
+
+# wf2 — broken from the first tick: a health expression requiring an
+# element that never exists. webwatch FAILs on tick 1.
+"wf2_missing_element" tname
+"!!document.querySelector('#cf22-definitely-not-here')" 500 3 webwatch
+
+webclose
+tsummary

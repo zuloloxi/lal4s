@@ -1,0 +1,17 @@
+# tests/snippets_fail.txt — intentional-FAIL set
+# Launch: color_iw.exe tests/snippets_fail.txt
+# Then press Ctrl+Shift+F1.
+# Expected: [TEST RUN] 00000000 pass, 00000004 fail
+# Use this to verify the FAIL log format and runner exit codes.
+
+::: tF_all ! Ctrl+Shift+B
+"f1_explicit_fail" tname
+"intentional failure for negative-path validation" tfail
+"f2_window_absent" tname
+"DefinitelyNotAWindowTitle 99999" expect_window
+"f3_pixel_impossible" tname
+; want pure-red at (0,0) with tol 0 — desktop is never exactly this
+0 0 255 0 expect_pixel
+"f4_img_absent" tname
+"Images\DoesNotExist.bmp" 50 expect_img
+tsummary

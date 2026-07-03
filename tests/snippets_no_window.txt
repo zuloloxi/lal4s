@@ -1,0 +1,34 @@
+# tests/snippets_no_window.txt — expect_no_window_in smoke test
+#
+# expect_no_window_in ( "title_substr" -- )
+#   Inverse-substring window assertion. PASS when no top-level
+#   window's title contains the substring. FAIL when at least
+#   one match exists (diagnostic shows the matched title).
+#
+# Use case: "make sure the error dialog is gone" / "verify
+# Notepad++ closed" / "no zombie windows linger".
+#
+# Launch:
+#   color_iw.exe tests/snippets_no_window.txt
+#
+# Run:
+#   Ctrl+Shift+1  — assert no "Notepad++" window. FAIL if Notepad++
+#                   is open (shows the actual matched title).
+#                   PASS if Notepad++ is closed.
+#   Ctrl+Shift+2  — assert no "zzz_impossible_xyz" window. PASS
+#                   (vacuously — that substring never matches).
+#   Ctrl+Shift+3  — assert no "ColorForth" — should FAIL because
+#                   cf22 itself matches.
+
+::: tNW_npp ! Ctrl+Shift+1
+"no_window_npp" tname
+"Notepad++" expect_no_window_in
+
+::: tNW_impossible ! Ctrl+Shift+2
+"no_window_impossible" tname
+"zzz_impossible_xyz" expect_no_window_in
+
+::: tNW_cf22 ! Ctrl+Shift+3
+"no_window_cf22_should_fail" tname
+"ColorForth" expect_no_window_in
+tsummary

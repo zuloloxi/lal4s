@@ -1,0 +1,39 @@
+# --- build artifacts (produced by cl.bat / cld.bat) ---
+*.obj
+*.res
+*.RES
+*.map
+*.exe
+*.pdb
+*.lst
+*.sbr
+*.ilk
+*.dll
+*.lib
+!helpers.dll
+
+# --- runtime output ---
+*_debug.log
+
+# --- OS / editor cruft ---
+Thumbs.db
+Desktop.ini
+
+# --- separate/embedded projects (their own git repos; not part of lal4s) ---
+ShotCap_3p/
+
+# --- Visual Studio build output (e.g. libhelpers) ---
+Release/
+Debug/
+x64/
+.vs/
+*.pch
+*.ipdb
+*.iobj
+*.tlog/
+*.recipe
+*.exp
+
+# --- stray build logs ---
+*.err
+cl14.txt

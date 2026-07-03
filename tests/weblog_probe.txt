@@ -1,0 +1,21 @@
+# weblog end-to-end probe against the local node test server.
+#
+# 1. Start the server:  node tests\webserver\server.js   (or tests\webserver\start.bat)
+#    -> serves http://localhost:8722/good.html
+# 2. Run lal4s:  lal4s.exe tests\weblog_probe.txt
+# 3. Trigger snippet 0 (Ctrl+Shift+F7 below) and tail lal4s_debug.log for [weblog] lines.
+#
+# Expected [weblog] output:
+#   [weblog] document.title => cf22 Good Page
+#   [weblog] document.getElementById('main').textContent => cf22 test page
+#   [weblog] window.cf22Ready === true => true
+#   [weblog] document.querySelectorAll('button').length => 1
+
+::: probe ! Ctrl+Shift+F7
+"http://localhost:8722/good.html" 9222 weburl
+2000 wait
+"document.title" weblog
+"document.getElementById('main').textContent" weblog
+"window.cf22Ready === true" weblog
+"document.querySelectorAll('button').length" weblog
+webclose
