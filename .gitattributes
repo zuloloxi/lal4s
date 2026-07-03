@@ -1,0 +1,21 @@
+# Normalize text to LF in the repository; check out native per platform.
+* text=auto
+
+# --- Windows batch: MUST be CRLF (cmd.exe mis-parses LF-only .bat) ---
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+
+# --- MASM sources / includes / resource script: CRLF on checkout ---
+*.asm  text eol=crlf
+*.inc  text eol=crlf
+*.rc   text eol=crlf
+
+# --- Binary assets: never convert or diff ---
+*.dll  binary
+*.exe  binary
+*.pdb  binary
+*.lib  binary
+*.ico  binary
+*.bmp  binary
+*.res  binary
+*.obj  binary
